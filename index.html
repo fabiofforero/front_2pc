@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Transferencia Bancaria</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    form {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: inline-block;
+    }
+
+    input, select, button {
+      padding: 0.5rem;
+      margin: 0.5rem;
+      width: 80%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #resultado {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>💸 Transferencia Bancaria</h1>
+
+  <form id="formulario">
+    <select id="origenEsLocal" required>
+      <option value="true">Cuenta origen: Banco 1</option>
+      <option value="false">Cuenta origen: Banco 2</option>
+    </select><br/>
+    <input type="number" id="idOrigen" placeholder="ID Cuenta origen" required /><br/>
+    <input type="number" id="idDestino" placeholder="ID Cuenta destino" required /><br/>
+    <input type="number" id="monto" placeholder="Monto a transferir" required /><br/>
+    <button type="submit">Transferir</button>
+  </form>
+
+  <div id="resultado"></div>
+
+  <button onclick="verTodasLasCuentas()">Ver cuentas de Banco 1 y Banco 2</button>
+  <div id="resultado-cuentas"></div>
+
+  <script>
+    const formulario = document.getElementById('formulario');
+    const resultado = document.getElementById('resultado');
+
+    formulario.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const idOrigen = document.getElementById('idOrigen').value;
+      const idDestino = document.getElementById('idDestino').value;
+      const monto = document.getElementById('monto').value;
+      const origenEsLocal = document.getElementById('origenEsLocal').value === 'true';
+
+      const res = await fetch('/transferir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idOrigen, idDestino, monto, origenEsLocal })
+      });
+
+      const data = await res.json();
+      resultado.textContent = data.mensaje || data.error;
+      resultado.style.color = res.ok ? 'green' : 'red';
+    });
+
+    async function verTodasLasCuentas() {
+  const div = document.getElementById('resultado-cuentas');
+  div.innerHTML = '<p>⏳ Cargando...</p>';
+
+  try {
+    const res = await fetch('/todas-cuentas');
+    const data = await res.json();
+
+    const { cuentas, errores } = data;
+
+    // Validación: si no es un array, mostramos error
+    if (!Array.isArray(cuentas)) {
+      div.innerHTML = `<p style="color:red;">❌ Error: respuesta inesperada del servidor</p>`;
+      return;
+    }
+
+    // Mostrar errores si existen
+    if (errores && errores.length > 0) {
+      div.innerHTML = errores.map(err => `<p style="color:red;">⚠️ ${err}</p>`).join('');
+    } else {
+      div.innerHTML = '';
+    }
+
+    // Mostrar cuentas si hay
+    if (cuentas.length > 0) {
+      div.innerHTML += cuentas.map(c =>
+        `<p><strong>${c.origen}</strong> - ID: ${c.id}, Nombre: ${c.nombre}, Saldo: $${c.saldo}</p>`
+      ).join('');
+    } else {
+      div.innerHTML += `<p>😕 No hay cuentas disponibles</p>`;
+    }
+
+  } catch (error) {
+    console.error('❌ Error al cargar cuentas:', error);
+    div.innerHTML = `<p style="color:red;">❌ Error de red o del servidor</p>`;
+  }
+}
+
+  </script>
+</body>
+</html>
