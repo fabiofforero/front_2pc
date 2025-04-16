@@ -75,7 +75,7 @@
       const monto = document.getElementById('monto').value;
       const origenEsLocal = document.getElementById('origenEsLocal').value === 'true';
 
-      const res = await fetch('/transferir', {
+      const res = await fetch('/http://192.168.81.109:3000/transferir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idOrigen, idDestino, monto, origenEsLocal })
@@ -91,7 +91,7 @@
   div.innerHTML = '<p>⏳ Cargando...</p>';
 
   try {
-    const res = await fetch('/todas-cuentas');
+    const res = await fetch('/todas-http://192.168.81.109:3000/todas-cuentas');
     const data = await res.json();
 
     const { cuentas, errores } = data;
